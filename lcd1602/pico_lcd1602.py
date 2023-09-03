@@ -12,6 +12,28 @@ from time import sleep_ms
 LCD1602_CLEAR = 0x1
 LCD1602_RETURN_HOME = 0x2
 
+#Set Function Options
+LCD1602_8BIT = 0x30
+LCD1602_4BIT = 0x20
+LCD1602_ONE_LINE = 0x20
+LCD1602_TWO_LINE = 0x28
+LCD1602_FONT_5X8 = 0x20
+LCD1602_FONT_5X11 = 0x24
+
+#Display Options
+LCD1602_ON = 0xc
+LCD1602_OFF = 0x8
+LCD1602_CURSOR_ON = 0xa
+LCD1602_CURSOR_OFF = 0x8
+LCD1602_CURSOR_BLINK_ON = 0x9
+LCD1602_CURSOR_BLINK_OFF = 0x8
+
+#Entry Mode Options
+LCD1602_ENT_CURSOR_MOVE_RIGHT = 0x6
+LCD1602_ENT_CURSOR_MOVE_LEFT = 0x4
+LCD1602_ENT_DISPLAY_SHIFT_LEFT = 0x7
+LCD1602_ENT_DISPLAY_SHIFT_RIGHT = 0x5
+
 #Char Definitions
 chars = {"0": 0x30, "1": 0x31, "2": 0x32, "3": 0x33, "4": 0x34,
          "5": 0x35, "6": 0x36, "7": 0x37, "8": 0x38, "9": 0x39,
@@ -28,7 +50,10 @@ chars = {"0": 0x30, "1": 0x31, "2": 0x32, "3": 0x33, "4": 0x34,
          "y": 0x79, "z": 0x7a, "!": 0x21, "\"": 0x22, "#": 0x23,
          "$": 0x24, "%": 0x25, "&": 0x26, "\'": 0x27, "(": 0x28,
          ")": 0x29, "*": 0x2a, "+": 0x2b, ",": 0x2c, "-": 0x2d,
-         ".": 0x2e, "/": 0x2f
+         ".": 0x2e, "/": 0x2f, ":": 0x3a, ";": 0x3b, "<": 0x3c,
+         "=": 0x3d, ">": 0x3e, "?": 0x3f, "[": 0x5b, "￥": 0x5c,
+         "]": 0x5d, "^": 0x5e, "_": 0x5f, "{": 0x7b, "|": 0x7c,
+         "}": 0x7d, "→": 0x7e, "←": 0x7f, " ": 0x10
          }
 
 
@@ -54,6 +79,9 @@ class LCD1602:
         
         
     def write_data(self, data):
+        """
+        Write display content to LCD1602
+        """
         sleep_us(5)
         self.rs.value(1)
         self.rw.value(0)
@@ -64,8 +92,12 @@ class LCD1602:
         self.en.value(0)
         sleep_us(5)
         self.rw.value(1)
+        sleep_ms(2)
     
     def write_command(self, cmd):
+        """
+        Write command to LCD1602
+        """
         sleep_us(5)
         self.rs.value(0)
         self.rw.value(0)
@@ -76,16 +108,47 @@ class LCD1602:
         self.en.value(0)
         sleep_us(5)
         self.rw.value(1)
+        sleep_ms(2)
     
-    def print_str(data: str):
-        pass
+    def print_str(self, data: str):
+        for c in data:
+            self.write_data(chars.get(c))
     
     def reset(self):
         self.write_command(LCD1602_CLEAR)
+        
+    def return_home(self):
+        self.write_command(LCD1602_RETURN_HOME)
+    
+    def set_function(self, options):
+        self.write_command(options)
         sleep_ms(2)
     
-    def move_cursor():
-        pass
+    def set_display_options(self, options):
+        self.write_command(options)
+        
+    def set_entry_mode(self, options):
+        self.write_command(options)
+        
+    def shift_cursor(self, shift):
+        if shift < 0:
+            for i in range(shift, 0):
+                self.write_command(0x10)
+        elif shift > 0:
+            for i in range(0, shift):
+                self.write_command(0x14)
+        else:
+            return
     
-    def set_function(self):
-        pass
+    def set_cursor_position(self, row, col):
+        self.write_command((1 << 7) | (row * 0x40 + col)) 
+        
+    def shift_display(self, shift):
+        if shift < 0:
+            for i in range(shift, 0):
+                self.write_command(0x18)
+        elif shift > 0:
+            for i in range(0, shift):
+                self.write_command(0x1c)
+        else:
+            return
